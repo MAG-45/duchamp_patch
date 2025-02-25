@@ -1,65 +1,3 @@
-From 53ebff0802f1043f361c699442a982b5b6e7792a Mon Sep 17 00:00:00 2001
-From: raghavt20 <raghavt20@aospa.co>
-Date: Tue, 7 Jan 2025 18:59:51 +0530
-Subject: [PATCH] biometrics: virtualhal: Revert for mfp daemon to work
-
-Revert "Merge "Retrieve IFIngerprint from IVirtual interface over Fingerprint Virtual HAL" into main"
-
-This reverts commit 2c2b2ca72d12be5760769c3bf5ed7a72e0ed92cf, reversing
-changes made to 529e1eb7536b4bffb24d3ecca79e22841b8d9d2c.
-
-Revert "Optionally use fingerprint virtual hal eith BiometricTestSession"
-
-This reverts commit fbef2e303def7c35a7e75503e315a8044075e772.
-
-Revert "Allow Biometric TestApi to use virtual hal"
-
-This reverts commit 97270611df31a05ea84e40ad3320137367487c4b.
-
-Revert "Merge "Call setIgnore directly on session" into main"
-
-This reverts commit 69b28036076cd14c5bc3ec64d06b469b450f0cff, reversing
-changes made to b92453431e94647ccac43166727130ea7fd2046d.
-
-Revert "Face VHAL for user build"
-
-This reverts commit 7b3dcebe6388f6c2dc01033af70e74f169a74e27.
-
-Revert "udfps: Make pressed udfps view configurable"
-
-This reverts commit b5f1c1bba33d5b6baeefedec20c4be69297ecc14.
-
-Revert "udfps: Restore illumination dot for global hbm"
-
-This reverts commit a44add8719a91c02a5552fda57a7a3b1a9d2c487.
-
-Revert "SystemUI: Update UdfpsTouchOverlay sensorRect on updating overlay params"
-
-This reverts commit 0708276fad178580d4acaebb831824dcbaad3a28.
-
-DNM: SystemUI: Add xiaomi fingerprintextension and touchfeature calls
-
- * before you bully me for this this only till i get fp aidl done
----
- Android.bp                                    |  4 +-
- .../face/FaceSensorConfigurations.java        | 47 ++---------
- .../FingerprintSensorConfigurations.java      | 42 +---------
- packages/SystemUI/Android.bp                  |  2 +
- .../systemui/biometrics/UdfpsController.java  | 47 +++++++++++
- .../biometrics/UdfpsControllerOverlay.kt      |  1 -
- services/core/Android.bp                      |  2 +
- .../server/biometrics/AuthService.java        |  8 +-
- .../server/biometrics/biometrics.aconfig      | 18 +---
- .../biometrics/sensors/face/FaceService.java  | 24 +-----
- .../face/aidl/BiometricTestSessionImpl.java   | 53 ++----------
- .../sensors/face/aidl/FaceProvider.java       | 79 ++----------------
- .../biometrics/sensors/face/aidl/Sensor.java  |  4 +-
- .../fingerprint/FingerprintService.java       | 25 +-----
- .../aidl/BiometricTestSessionImpl.java        | 56 ++-----------
- .../fingerprint/aidl/FingerprintProvider.java | 83 +++----------------
- .../sensors/fingerprint/aidl/Sensor.java      |  6 +-
- 17 files changed, 104 insertions(+), 397 deletions(-)
-
 diff --git a/Android.bp b/Android.bp
 index 01a9fd26d453..8ef018258c46 100644
 --- a/Android.bp
@@ -222,8 +160,21 @@ index 48c5887d80d0..43c0da9bd8ed 100644
              if (fp != null) {
                  props = fp.getSensorProps();
              } else {
+diff --git a/packages/SystemUI/Android.bp b/packages/SystemUI/Android.bp
+index ee48eb729631..326eb748cc39 100644
+--- a/packages/SystemUI/Android.bp
++++ b/packages/SystemUI/Android.bp
+@@ -584,6 +584,8 @@ android_library {
+         "androidx.compose.material3_material3",
+         "androidx.compose.material_material-icons-extended",
+         "androidx.activity_activity-compose",
++	"vendor.xiaomi.hardware.fingerprintextension-V1-java",
++        "vendor.xiaomi.hw.touchfeature-V1-java",
+         "androidx.compose.animation_animation-graphics",
+         "androidx.lifecycle_lifecycle-viewmodel-compose",
+         "vendor.lineage.powershare-V1.0-java",
 diff --git a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
-index 8895e7d806b7..1699129fd1a7 100644
+index 02901a5751f9..29ca30673a73 100644
 --- a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
 +++ b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
 @@ -137,6 +137,8 @@ import java.util.Set;
@@ -289,7 +240,7 @@ index 8895e7d806b7..1699129fd1a7 100644
  
      @Override
      public void dump(@NonNull PrintWriter pw, @NonNull String[] args) {
-@@ -1293,6 +1335,9 @@ public class UdfpsController implements DozeReceiver, Dumpable {
+@@ -1300,6 +1342,9 @@ public class UdfpsController implements DozeReceiver, Dumpable {
              }
          }
  
@@ -299,7 +250,7 @@ index 8895e7d806b7..1699129fd1a7 100644
          if (isOptical()) {
              for (Callback cb : mCallbacks) {
                  cb.onFingerDown();
-@@ -1356,6 +1401,8 @@ public class UdfpsController implements DozeReceiver, Dumpable {
+@@ -1367,6 +1412,8 @@ public class UdfpsController implements DozeReceiver, Dumpable {
              mPowerManagerInternal.setPowerMode(PowerManagerInternal.MODE_LAUNCH, false);
          }
  
@@ -321,14 +272,14 @@ index caf36440a52b..b9e5745e11c3 100644
              if (addViewRunnable == null) {
                  // Only updateViewLayout if there's no pending view to add to WM.
 diff --git a/services/core/Android.bp b/services/core/Android.bp
-index 30006d302d8b..5a41ed115c0b 100644
+index 0017d9085c84..a93bf6256b72 100644
 --- a/services/core/Android.bp
 +++ b/services/core/Android.bp
 @@ -243,6 +243,8 @@ java_library_static {
          "locksettings_flags_lib",
-         "vendor.aac.hardware.richtap.vibrator",
          "vendor.aospa.biometrics.face",
-+	"vendor.xiaomi.hardware.fingerprintextension-V1-java",
+         "vendor.aac.hardware.richtap.vibrator",
++        "vendor.xiaomi.hardware.fingerprintextension-V1-java",
 +        "vendor.xiaomi.hw.touchfeature-V1-java",
      ],
      javac_shard_size: 50,
@@ -960,7 +911,7 @@ index fd3d9963c5e3..a50ce2b0305f 100644
  }
 +
 diff --git a/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java b/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
-index 6018ae1dd77f..819d2942fd0f 100644
+index cafde1394a65..90680629674f 100644
 --- a/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
 +++ b/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
 @@ -17,8 +17,6 @@
@@ -997,7 +948,7 @@ index 6018ae1dd77f..819d2942fd0f 100644
  
      private boolean mCleanup;
  
-@@ -298,8 +292,7 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+@@ -302,8 +296,7 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
          if (mTestHalEnabled) {
              return true;
          }
@@ -1007,7 +958,7 @@ index 6018ae1dd77f..819d2942fd0f 100644
                  != null);
      }
  
-@@ -307,29 +300,10 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+@@ -311,29 +304,10 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
      @VisibleForTesting
      synchronized IFingerprint getHalInstance() {
          if (mTestHalEnabled) {
@@ -1041,7 +992,7 @@ index 6018ae1dd77f..819d2942fd0f 100644
          }
  
          if (mDaemon != null) {
-@@ -338,7 +312,10 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+@@ -342,7 +316,10 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
  
          Slog.d(getTag(), "Daemon was null, reconnecting");
  
@@ -1053,7 +1004,7 @@ index 6018ae1dd77f..819d2942fd0f 100644
          if (mDaemon == null) {
              Slog.e(getTag(), "Unable to get daemon");
              return null;
-@@ -799,17 +776,7 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+@@ -803,17 +780,7 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
  
      @Override
      public void setIgnoreDisplayTouches(long requestId, int sensorId, boolean ignoreTouches) {
@@ -1072,7 +1023,7 @@ index 6018ae1dd77f..819d2942fd0f 100644
                  requestId, (client) -> {
                      if (!(client instanceof Udfps)) {
                          Slog.e(getTag(),
-@@ -818,7 +785,6 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+@@ -822,7 +789,6 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
                      }
                      ((Udfps) client).setIgnoreDisplayTouches(ignoreTouches);
                  });
@@ -1080,7 +1031,7 @@ index 6018ae1dd77f..819d2942fd0f 100644
      }
  
      @Override
-@@ -922,13 +888,7 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+@@ -926,13 +892,7 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
      }
  
      void setTestHalEnabled(boolean enabled) {
@@ -1094,7 +1045,7 @@ index 6018ae1dd77f..819d2942fd0f 100644
      }
  
      public boolean getTestHalEnabled() {
-@@ -1011,27 +971,4 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+@@ -1015,27 +975,4 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
      public void sendFingerprintReEnrollNotification() {
          mAuthenticationStatsCollector.sendFingerprintReEnrollNotification();
      }
@@ -1146,20 +1097,3 @@ index 25d1fe7d32ba..d12d7b2dc89a 100644
      }
  
      @NonNull protected BiometricContext getBiometricContext() {
--- 
-2.25.1
-
-diff --git a/services/core/Android.bp b/services/core/Android.bp
-index 08e8580b928a..1b5e07e7f405 100644
---- a/services/core/Android.bp
-+++ b/services/core/Android.bp
-@@ -242,7 +242,8 @@ java_library_static {
-         "powerstats_flags_lib",
-         "locksettings_flags_lib",
-         "vendor.aospa.biometrics.face",
--	"vendor.xiaomi.hardware.fingerprintextension-V1-java",
-+        "vendor.aac.hardware.richtap.vibrator",
-+	    "vendor.xiaomi.hardware.fingerprintextension-V1-java",
-         "vendor.xiaomi.hw.touchfeature-V1-java",
-     ],
-     javac_shard_size: 50,
